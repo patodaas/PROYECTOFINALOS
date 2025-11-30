@@ -1,76 +1,76 @@
-# Storage Manager - Partes 6-10
+# Storage Manager - Parts 6-10
 
-Sistema de gestión de almacenamiento empresarial implementando monitoreo, backups, optimización de rendimiento, arquitectura IPC y módulo del kernel.
+Enterprise storage management system implementing monitoring, backups, performance optimization, IPC architecture, and kernel module.
 
-## 👥 Equipo
+## 👥 Team
 
-- Patricio Dávila Assad - Partes 6-10
-- Diego Cristobal Gael Serna Domínguez - Partes 1-4
-- Angel Valencia Saavedra - Partes 5,11-12
+- Patricio Dávila Assad - Parts 6-10
+- Diego Cristobal Gael Serna Domínguez - Parts 1-4
+- Angel Valencia Saavedra - Parts 5, 11-12
 
-## 📦 Componentes Implementados
+## 📦 Implemented Components
 
-### Parte 6: Sistema de Monitoreo (30 pts)
-- ✅ Monitoreo de I/O (reads/writes, throughput, latency)
-- ✅ Tracking de recursos (disk usage, inodes)
-- ✅ Métricas de rendimiento (IOPS, MB/s)
-- ✅ Datos históricos con SQLite
-- ✅ Monitoreo continuo en background
+### Part 6: Monitoring System (30 pts)
+- ✅ I/O monitoring (reads/writes, throughput, latency)
+- ✅ Resource tracking (disk usage, inodes)
+- ✅ Performance metrics (IOPS, MB/s)
+- ✅ Historical data stored in SQLite
+- ✅ Continuous background monitoring
 
-### Parte 7: Sistema de Backups (35 pts)
-- ✅ Backups Full, Incremental y Differential
-- ✅ Snapshots LVM para consistencia
-- ✅ Verificación de integridad
-- ✅ Restauración completa y parcial
-- ✅ Base de datos de backups
-- ✅ Limpieza automática de backups antiguos
+### Part 7: Backup System (35 pts)
+- ✅ Full, Incremental, and Differential backups
+- ✅ LVM snapshots for consistency
+- ✅ Integrity verification
+- ✅ Full and partial restore
+- ✅ Backup database
+- ✅ Automatic cleanup of old backups
 
-### Parte 8: Optimización de Rendimiento (20 pts)
-- ✅ Gestión de I/O schedulers (deadline, cfq, bfq, kyber)
-- ✅ Ajuste de read-ahead y queue depth
-- ✅ Parámetros VM del kernel (swappiness, dirty_ratio)
-- ✅ Benchmarking de rendimiento
-- ✅ Recomendaciones por tipo de workload
+### Part 8: Performance Optimization (20 pts)
+- ✅ I/O scheduler management (deadline, cfq, bfq, kyber)
+- ✅ Read-ahead and queue depth tuning
+- ✅ Kernel VM parameters (swappiness, dirty_ratio)
+- ✅ Performance benchmarking
+- ✅ Recommendations based on workload type
 
-### Parte 9: Arquitectura IPC (25 pts)
-- ✅ Servidor UNIX domain sockets
-- ✅ Multi-cliente con select()
-- ✅ Shared memory para estado del sistema
-- ✅ Message queues para jobs asíncronos
-- ✅ Semáforos para sincronización
-- ✅ Protocolo binario de comunicación
+### Part 9: IPC Architecture (25 pts)
+- ✅ UNIX domain socket server
+- ✅ Multi-client using `select()`
+- ✅ Shared memory for system state
+- ✅ Message queues for asynchronous jobs
+- ✅ Semaphores for synchronization
+- ✅ Binary communication protocol
 
-### Parte 10: Módulo del Kernel (20 pts)
-- ✅ Interfaz /proc/storage_stats
-- ✅ Tracking de operaciones I/O
-- ✅ Estadísticas por dispositivo
-- ✅ Comandos desde user-space
-- ✅ Manejo seguro de concurrencia
+### Part 10: Kernel Module (20 pts)
+- ✅ `/proc/storage_stats` interface
+- ✅ I/O operations tracking
+- ✅ Device-level statistics
+- ✅ User-space commands
+- ✅ Safe concurrency handling
 
-## 🚀 Instalación Rápida
+## 🚀 Quick Installation
 
 ```bash
-# 1. Clonar o descargar el proyecto
+# 1. Clone or download the project
 cd ~/storage_manager
 
-# 2. Hacer ejecutable el script de setup
+# 2. Make the setup script executable
 chmod +x setup.sh
 
-# 3. Ejecutar instalación completa (requiere root)
+# 3. Run full installation (requires root)
 sudo ./setup.sh install
 
-# O seguir el menú interactivo
+# Or use the interactive menu
 sudo ./setup.sh
 ```
 
-## 📋 Requisitos
+## 📋 Requirements
 
-### Sistema Operativo
+### Operating System
 - Ubuntu 20.04+ / Debian 10+
 - CentOS 8+ / RHEL 8+ / Fedora 33+
 - Kernel 4.15+
 
-### Paquetes Necesarios
+### Required Packages
 ```bash
 # Ubuntu/Debian
 sudo apt install build-essential gcc make cmake git \
@@ -82,28 +82,28 @@ sudo yum install gcc make cmake git sqlite sqlite-devel \
                  openssl-devel kernel-devel rsync lvm2 mdadm
 ```
 
-### Hardware Recomendado
+### Recommended Hardware
 - 2+ GB RAM
-- 20+ GB espacio en disco
-- CPU con 2+ cores
+- 20+ GB disk space
+- CPU with 2+ cores
 
-## 🔧 Compilación Manual
+## 🔧 Manual Compilation
 
 ```bash
-# Compilar todo
+# Compile everything
 make all
 
-# Compilar solo el módulo del kernel
+# Compile only the kernel module
 make kernel
 
-# Ejecutar tests
+# Run tests
 make test
 
-# Limpiar
+# Clean build artifacts
 make clean
 ```
 
-## 📂 Estructura del Proyecto
+## 📂 Project Structure
 
 ```
 storage_manager/
@@ -112,16 +112,16 @@ storage_manager/
 │   ├── backup_engine.h
 │   ├── performance_tuner.h
 │   └── ipc_server.h
-├── src/                  # Implementaciones
+├── src/                  # Implementations
 │   ├── monitor.c
 │   ├── backup_engine.c
 │   ├── performance_tuner.c
 │   ├── ipc_server.c
 │   ├── daemon_main.c
 │   └── utils.c
-├── cli/                  # Cliente CLI
+├── cli/                  # CLI client
 │   └── storage_cli.c
-├── kernel_module/        # Módulo del kernel
+├── kernel_module/        # Kernel module
 │   ├── storage_stats.c
 │   └── Makefile
 ├── tests/                # Tests
@@ -130,201 +130,203 @@ storage_manager/
 │   ├── test_perf.c
 │   └── test_ipc.c
 ├── Makefile             # Build system
-├── setup.sh             # Script de instalación
-└── README.md            # Esta documentación
+├── setup.sh             # Installation script
+└── README.md            # This documentation
 ```
 
-## 💻 Uso
+## 💻 Usage
 
-### Iniciar el Daemon
+### Start the Daemon
 
 ```bash
-# Método 1: Systemd (recomendado)
+# Method 1: Systemd (recommended)
 sudo systemctl start storage_mgr
-sudo systemctl enable storage_mgr  # Auto-inicio
+sudo systemctl enable storage_mgr  # Auto-start on boot
 
-# Método 2: Manual en foreground (para debugging)
+# Method 2: Manual in foreground (for debugging)
 sudo ./bin/storage_daemon -f
 
-# Método 3: Manual en background
+# Method 3: Manual in background
 sudo ./bin/storage_daemon
 ```
 
-### Cliente CLI
+### CLI Client
 
-#### Comandos de Monitoreo
+#### Monitoring Commands
 
 ```bash
-# Ver estadísticas de un dispositivo
+# View device stats
 sudo storage_cli monitor stats sda
 
-# Iniciar monitoreo continuo (cada 5 segundos)
+# Start continuous monitoring (every 5 seconds)
 sudo storage_cli monitor start 5
 
-# Detener monitoreo
+# Stop monitoring
 sudo storage_cli monitor stop
 ```
 
-#### Comandos de Backup
+#### Backup Commands
 
 ```bash
-# Crear backup full
+# Create full backup
 sudo storage_cli backup create /data /backup full
 
-# Crear backup incremental
+# Create incremental backup
 sudo storage_cli backup create /data /backup incremental
 
-# Listar backups
+# List backups
 sudo storage_cli backup list
 
-# Restaurar backup
+# Restore backup
 sudo storage_cli backup restore backup-20250527-143022 /restore
 
-# Verificar integridad
+# Verify integrity
 sudo storage_cli backup verify backup-20250527-143022
 ```
 
-#### Comandos de Performance
+#### Performance Commands
 
 ```bash
-# Ejecutar benchmark
+# Run benchmark
 sudo storage_cli perf benchmark sda /mnt/data/testfile
 
-# Ajustar configuración
+# Tune configuration
 sudo storage_cli perf tune sda --scheduler=deadline --readahead=2048
 
-# Obtener recomendaciones
+# Get recommendations
 sudo storage_cli perf recommend sda database
 ```
 
-#### Comandos Generales
+#### General Commands
 
 ```bash
-# Ver estado del daemon
+# Check daemon status
 storage_cli status
 
-# Ayuda
+# Help
 storage_cli help
 ```
 
-### Módulo del Kernel
+### Kernel Module
+
+> ⚠️ **Important:** Before running `sudo make install`, you must first compile the module with `sudo make` inside the `kernel_module` folder.
 
 ```bash
-# Cargar módulo
 cd kernel_module
-sudo make install
+sudo make       # Compile first
+sudo make install  # Then install
 
-# Ver estadísticas
+# View statistics
 cat /proc/storage_stats
 
-# Resetear estadísticas
+# Reset statistics
 echo "reset" | sudo tee /proc/storage_stats
 
 # Debug on/off
 echo "debug on" | sudo tee /proc/storage_stats
 echo "debug off" | sudo tee /proc/storage_stats
 
-# Ver logs del kernel
+# View kernel logs
 dmesg | grep storage_stats
 
-# Descargar módulo
+# Remove module
 sudo make uninstall
 ```
 
 ## 🧪 Testing
 
-### Tests Automatizados
+### Automated Tests
 
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 sudo make test
 
-# Tests individuales
+# Individual tests
 sudo ./bin/test_monitor
 sudo ./bin/test_backup
 sudo ./bin/test_perf
 sudo ./bin/test_ipc
 ```
 
-### Crear Dispositivos Loop para Testing
+### Create Loop Devices for Testing
 
 ```bash
-# Crear imágenes de disco
+# Create disk images
 for i in {0..7}; do
     dd if=/dev/zero of=/tmp/disk$i.img bs=1M count=1024
     sudo losetup /dev/loop$i /tmp/disk$i.img
-done
+ done
 
-# Verificar
+# Verify
 losetup -a
 
-# Limpiar después
+# Cleanup
 for i in {0..7}; do
     sudo losetup -d /dev/loop$i
     rm /tmp/disk$i.img
-done
+ done
 ```
 
-## 📊 Ejemplos de Uso Real
+## 📊 Real Usage Examples
 
-### Escenario 1: Monitoreo de Servidor de Base de Datos
+### Scenario 1: Database Server Monitoring
 
 ```bash
-# 1. Iniciar daemon
+# 1. Start daemon
 sudo systemctl start storage_mgr
 
-# 2. Ver estadísticas actuales
+# 2. Check current stats
 sudo storage_cli monitor stats sda
 
-# 3. Optimizar para workload de base de datos
+# 3. Optimize for database workload
 sudo storage_cli perf recommend sda database
-# Responder 'y' para aplicar
+# Respond 'y' to apply
 
-# 4. Iniciar monitoreo continuo
+# 4. Start continuous monitoring
 sudo storage_cli monitor start 10
 
-# 5. Crear backup con snapshot LVM
+# 5. Create backup with LVM snapshot
 sudo storage_cli backup create /var/lib/mysql /backup full
 ```
 
-### Escenario 2: Backup Automático con Snapshots
+### Scenario 2: Automated Backups with Snapshots
 
 ```bash
-# Script de backup diario (guardar como /usr/local/bin/daily_backup.sh)
+# Daily backup script (/usr/local/bin/daily_backup.sh)
 #!/bin/bash
 /usr/local/bin/storage_cli backup create /data /backup incremental
-/usr/local/bin/storage_cli backup cleanup 7  # Mantener últimos 7
+/usr/local/bin/storage_cli backup cleanup 7  # Keep last 7
 
-# Agregar a cron (ejecutar a las 2 AM)
+# Add to cron (run at 2 AM)
 sudo crontab -e
-# Agregar: 0 2 * * * /usr/local/bin/daily_backup.sh
+# Add: 0 2 * * * /usr/local/bin/daily_backup.sh
 ```
 
-### Escenario 3: Análisis de Performance
+### Scenario 3: Performance Analysis
 
 ```bash
-# 1. Benchmark antes de optimizar
+# 1. Benchmark before tuning
 sudo storage_cli perf benchmark sda /mnt/data/test > before.txt
 
-# 2. Aplicar optimizaciones
+# 2. Apply optimizations
 sudo storage_cli perf tune sda --scheduler=deadline --readahead=2048
 sudo storage_cli perf tune sda --vm-swappiness=10 --vm-dirty-ratio=15
 
-# 3. Benchmark después
+# 3. Benchmark after
 sudo storage_cli perf benchmark sda /mnt/data/test > after.txt
 
-# 4. Comparar resultados
+# 4. Compare results
 diff before.txt after.txt
 ```
 
-## 🗄️ Bases de Datos
+## 🗄️ Databases
 
-### Monitoreo
+### Monitoring
 ```bash
-# Ubicación
+# Location
 /var/lib/storage_mgr/monitoring.db
 
-# Inspeccionar
+# Inspect
 sqlite3 /var/lib/storage_mgr/monitoring.db
 > SELECT * FROM performance_history ORDER BY timestamp DESC LIMIT 10;
 > .schema
@@ -333,10 +335,10 @@ sqlite3 /var/lib/storage_mgr/monitoring.db
 
 ### Backups
 ```bash
-# Ubicación
+# Location
 /var/lib/storage_mgr/backups.db
 
-# Inspeccionar
+# Inspect
 sqlite3 /var/lib/storage_mgr/backups.db
 > SELECT backup_id, timestamp, type, size_bytes FROM backups;
 > .exit
@@ -344,142 +346,108 @@ sqlite3 /var/lib/storage_mgr/backups.db
 
 ## 🐛 Troubleshooting
 
-### El daemon no inicia
+### Daemon Does Not Start
 
 ```bash
-# Verificar logs
+# Check logs
 sudo journalctl -u storage_mgr -f
 
-# Verificar permisos
+# Check permissions
 ls -la /var/run/storage_mgr.pid
 ls -la /var/run/storage_mgr.sock
 
-# Limpiar y reiniciar
+# Clean and restart
 sudo rm /var/run/storage_mgr.* 2>/dev/null
 sudo systemctl restart storage_mgr
 ```
 
-### El módulo del kernel no carga
+### Kernel Module Fails to Load
 
 ```bash
-# Ver errores
+# Check errors
 dmesg | tail -20
 
-# Verificar headers del kernel
+# Check kernel headers
 uname -r
 ls /lib/modules/$(uname -r)/build
 
-# Reinstalar headers
+# Reinstall headers
 sudo apt install linux-headers-$(uname -r)
 
-# Recompilar
+# Recompile
 cd kernel_module
-make clean && make
+sudo make clean && sudo make
 sudo make install
 ```
 
-### Errores de permisos
+### Permission Errors
 
 ```bash
-# Verificar que se ejecuta como root
+# Ensure running as root
 sudo storage_cli status
 
-# Verificar permisos de directorios
+# Check directory permissions
 sudo ls -la /var/lib/storage_mgr
 sudo ls -la /backup
 
-# Recrear con permisos correctos
+# Recreate with correct permissions
 sudo mkdir -p /var/lib/storage_mgr /backup
 sudo chmod 755 /var/lib/storage_mgr /backup
 ```
 
-## 📈 Métricas y Rendimiento
+## 📈 Metrics and Performance
 
-### Overhead del Sistema
-- CPU: < 1% en monitoreo normal
-- Memoria: ~50 MB
-- Disco: ~10 MB (bases de datos)
+### System Overhead
+- CPU: < 1% during normal monitoring
+- Memory: ~50 MB
+- Disk: ~10 MB (databases)
 
-### Capacidades
-- Clientes simultáneos: 64
-- Dispositivos monitoreados: 16
-- Backups concurrentes: 4
-- Samples históricos: Ilimitados (con cleanup)
+### Capabilities
+- Simultaneous clients: 64
+- Monitored devices: 16
+- Concurrent backups: 4
+- Historical samples: Unlimited (with cleanup)
 
-## 🔒 Seguridad
+## 🔒 Security
 
-- **Requiere root**: Todas las operaciones privilegiadas
-- **IPC seguro**: UNIX domain sockets con permisos 666
-- **Logs auditables**: Todas las operaciones se registran
-- **Integridad**: Checksums SHA256 en backups
+- **Root required**: All privileged operations
+- **Secure IPC**: UNIX domain sockets with 666 permissions
+- **Auditable logs**: All operations are logged
+- **Integrity**: SHA256 checksums for backups
 
 ## 📝 Logs
 
 ```bash
-# Logs del daemon
+# Daemon logs
 sudo journalctl -u storage_mgr -f
 
-# Logs del kernel module
+# Kernel module logs
 dmesg | grep storage_stats
 
-# Logs del sistema
+# System logs
 tail -f /var/log/syslog | grep storage
 ```
-
-## 🎓 Para la Presentación
-
-### Demostración Recomendada (15-20 min)
-
-1. **Introducción** (2 min)
-   - Arquitectura general
-   - Componentes implementados
-
-2. **Demo en Vivo** (10 min)
-   - Iniciar daemon
-   - Monitorear dispositivo real
-   - Crear backup incremental
-   - Aplicar optimización de performance
-   - Mostrar módulo del kernel
-
-3. **Código Notable** (5 min)
-   - Shared memory IPC
-   - Kernel module proc interface
-   - Backup engine con rsync
-
-4. **Q&A** (3-5 min)
-
-### Slides Sugeridos
-
-1. Título y equipo
-2. Arquitectura del sistema
-3. Parte 6: Monitoreo (capturas)
-4. Parte 7: Backups (demo)
-5. Parte 8: Performance (benchmarks)
-6. Parte 9: IPC (diagramas)
-7. Parte 10: Kernel Module (código)
-8. Desafíos y soluciones
-9. Resultados y métricas
-10. Conclusiones
-
-## 📚 Referencias
+## 📚 References
 
 - [Linux Device Drivers](https://lwn.net/Kernel/LDD3/)
 - [Advanced Linux Programming](http://advancedlinuxprogramming.com/)
 - [LVM HOWTO](https://tldp.org/HOWTO/LVM-HOWTO/)
 - [Linux Kernel Module Programming Guide](https://sysprog21.github.io/lkmpg/)
 
-## 🤝 Contribuciones
+## 🤝 Contributions
 
-Este proyecto es parte de un trabajo académico. Las partes 6-10 fueron implementadas por [tu nombre].
+This project is part of an academic assignment. Parts 6-10 were implemented by Patricio Dávila Assad.
 
-## 📄 Licencia
+## 📄 License
 
-Proyecto académico - Universidad [Nombre] - 2025
+Academic project - Universidad Autónoma de Guadalajara - 2025
 
 ---
 
-**¿Necesitas ayuda?** Revisa la sección de Troubleshooting o ejecuta:
+**Need help?** Check the Troubleshooting section or run:
+
 ```bash
 storage_cli help
-man storage_cli  # Si instalaste las man pages
+man storage_cli  # If man pages installed
 ```
+
