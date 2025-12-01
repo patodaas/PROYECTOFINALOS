@@ -16,3 +16,9 @@ bin/
 /tmp/
 *~
 *.swp
+build/
+obj/
+bin/
+build/
+obj/
+bin/

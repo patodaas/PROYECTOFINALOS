@@ -150,7 +150,7 @@ void ipc_disconnect_client(int client_fd) {
 
 int ipc_read_request(int client_fd, request_t *req) {
     ssize_t n = read(client_fd, req, sizeof(request_t));
-    if (n != sizeof(request_t)) {
+    if (n != (ssize_t)sizeof(request_t)) {
         return -1;
     }
     return 0;
@@ -158,7 +158,7 @@ int ipc_read_request(int client_fd, request_t *req) {
 
 int ipc_send_response(int client_fd, const response_t *resp) {
     ssize_t n = write(client_fd, resp, sizeof(response_t));
-    if (n != sizeof(response_t)) {
+    if (n != (ssize_t)sizeof(response_t)) {
         return -1;
     }
     return 0;
@@ -171,16 +171,18 @@ int ipc_dispatch_command(command_type_t cmd, const char *payload,
     switch (cmd) {
         case CMD_STATUS:
             snprintf(result, result_size,
-                    "Running:1 Clients:%d Uptime:%ld",
-                    server_state.num_clients,
-                    time(NULL) - (shared_status ? shared_status->started_at : 0));
+                     "Running:1 Clients:%d Uptime:%ld",
+                     server_state.num_clients,
+                     time(NULL) - (shared_status ? shared_status->started_at : 0));
             return STATUS_OK;
 
         case CMD_SHUTDOWN:
             server_state.running = 0;
+            snprintf(result, result_size, "Shutting down daemon");
             return STATUS_OK;
 
         default:
+            snprintf(result, result_size, "Invalid command");
             return STATUS_INVALID_COMMAND;
     }
 }
@@ -191,8 +193,12 @@ int ipc_handle_request(int client_fd, request_t *req, response_t *resp) {
     resp->request_id = req->request_id;
 
     char result[IPC_MAX_PAYLOAD_SIZE];
-    int status = ipc_dispatch_command(req->command, (const char*)req->payload,
-                                 result, sizeof(result));
+    memset(result, 0, sizeof(result));
+
+    int status = ipc_dispatch_command(req->command,
+                                      (const char*)req->payload,
+                                      result,
+                                      sizeof(result));
     resp->status = status;
 
     if (status == STATUS_OK) {
@@ -200,6 +206,9 @@ int ipc_handle_request(int client_fd, request_t *req, response_t *resp) {
         if (resp->data_size > IPC_MAX_PAYLOAD_SIZE)
             resp->data_size = IPC_MAX_PAYLOAD_SIZE;
         memcpy(resp->data, result, resp->data_size);
+    } else {
+        snprintf(resp->error_msg, sizeof(resp->error_msg),
+                 "%s", "Command failed");
     }
 
     return 0;
@@ -240,6 +249,18 @@ void ipc_shm_cleanup(void) {
     shm_unlink(SHM_NAME);
 }
 
+int ipc_shm_update_status(const system_status_t *status) {
+    if (!shared_status || !status) return -1;
+    *shared_status = *status;
+    return 0;
+}
+
+int ipc_shm_get_status(system_status_t *status) {
+    if (!shared_status || !status) return -1;
+    *status = *shared_status;
+    return 0;
+}
+
 int ipc_sem_init(void) {
     status_sem = sem_open(SEM_NAME, O_CREAT, 0666, 1);
     if (status_sem == SEM_FAILED) {
@@ -257,11 +278,13 @@ void ipc_sem_cleanup(void) {
 }
 
 int ipc_sem_wait(const char *name) {
+    (void)name;
     if (!status_sem) return -1;
     return sem_wait(status_sem);
 }
 
 int ipc_sem_post(const char *name) {
+    (void)name;
     if (!status_sem) return -1;
     return sem_post(status_sem);
 }
@@ -288,7 +311,8 @@ int ipc_server_run(void) {
         struct timeval timeout = {1, 0};
         int activity = select(max_fd + 1, &read_fds, NULL, NULL, &timeout);
 
-        if (activity <= 0) continue;
+        if (activity <= 0)
+            continue;
 
         if (FD_ISSET(server_state.server_fd, &read_fds)) {
             ipc_accept_client(server_state.server_fd);
@@ -296,7 +320,8 @@ int ipc_server_run(void) {
 
         pthread_mutex_lock(&server_state.clients_mutex);
         for (int i = 0; i < IPC_MAX_CLIENTS; i++) {
-            if (!server_state.clients[i].active) continue;
+            if (!server_state.clients[i].active)
+                continue;
             int fd = server_state.clients[i].fd;
 
             if (FD_ISSET(fd, &read_fds)) {
@@ -306,11 +331,12 @@ int ipc_server_run(void) {
                 if (ipc_read_request(fd, &req) == 0) {
                     ipc_handle_request(fd, &req, &resp);
                     ipc_send_response(fd, &resp);
-                } else {
-                    close(fd);
-                    server_state.clients[i].active = 0;
-                    server_state.num_clients--;
                 }
+
+                /* Siempre cerramos y marcamos como inactivo tras la respuesta */
+                close(fd);
+                server_state.clients[i].active = 0;
+                server_state.num_clients--;
             }
         }
         pthread_mutex_unlock(&server_state.clients_mutex);
@@ -377,6 +403,14 @@ int ipc_mq_receive_job(job_message_t *job, int wait) {
 int ipc_server_stop(void) {
     server_state.running = 0;
     return 0;
+}
+
+const char* ipc_command_to_string(command_type_t cmd) {
+    switch (cmd) {
+        case CMD_STATUS: return "STATUS";
+        case CMD_SHUTDOWN: return "SHUTDOWN";
+        default: return "OTHER";
+    }
 }
 
 const char* ipc_status_to_string(status_code_t s) {

@@ -29,9 +29,9 @@ void test_acl() {
     // Obtener ACL
     printf("\n[1.2] Obteniendo ACLs del archivo...\n");
     acl_entry_t entries[10];
-    int count = 10;
-    
-    if (acl_get("/tmp/test_acl_file.txt", entries, &count) == 0) {
+    int count = 0;
+
+    if (acl_get("/tmp/test_acl_file.txt", entries, 10, &count) == 0) {
         printf("✓ ÉXITO: Se encontraron %d ACLs\n", count);
         for (int i = 0; i < count; i++) {
             printf("  - Usuario: %s, Permisos: %s\n", 
@@ -62,8 +62,8 @@ void test_attributes() {
     system("touch /tmp/test_attr_file.txt");
     system("echo 'original content' > /tmp/test_attr_file.txt");
     
-    printf("\n[2.1] Estableciendo atributo inmutable...\n");
-    if (set_immutable("/tmp/test_attr_file.txt") == 0) {
+    printf("\n[2.1] Estableciendo atributo inmutable con attr_set_immutable()...\n");
+    if (attr_set_immutable("/tmp/test_attr_file.txt") == 0) {
         printf("✓ ÉXITO: Archivo marcado como inmutable\n");
         
         // Intentar modificar (debería fallar)
@@ -72,12 +72,17 @@ void test_attributes() {
         int ret = system("echo 'new content' >> /tmp/test_attr_file.txt 2>&1");
         if (ret != 0) {
             printf("✓ CORRECTO: No se pudo modificar (como se esperaba)\n");
+        } else {
+            printf("⚠ ADVERTENCIA: El sistema permitió modificar el archivo\n");
         }
         
         // Quitar inmutable
-        printf("\n[2.3] Removiendo atributo inmutable...\n");
-        unset_immutable("/tmp/test_attr_file.txt");
-        printf("✓ Atributo removido\n");
+        printf("\n[2.3] Removiendo atributo inmutable con attr_unset_immutable()...\n");
+        if (attr_unset_immutable("/tmp/test_attr_file.txt") == 0) {
+            printf("✓ Atributo removido\n");
+        } else {
+            printf("✗ ERROR: No se pudo remover el atributo inmutable\n");
+        }
         
         // Ahora sí se puede modificar
         printf("\n[2.4] Modificando archivo (ahora debería funcionar)...\n");
@@ -98,24 +103,18 @@ void test_audit() {
     print_separator();
     
     printf("\n[3.1] Escribiendo entradas de prueba al log...\n");
-    audit_log("TEST_OPERATION_1", "testuser", "/tmp/test1.txt");
-    audit_log("TEST_OPERATION_2", "testuser", "/tmp/test2.txt");
-    audit_log("TEST_OPERATION_3", "testuser", "/tmp/test3.txt");
+
+    // Usamos solo enums que existen en security_manager.c
+    audit_log(AUDIT_RAID_CREATE, "testuser", "Creación de RAID de prueba");
+    audit_log(AUDIT_LVM_CREATE,  "testuser", "Creación de LVM de prueba");
+    audit_log(AUDIT_ACL_CHANGE,  "testuser", "Cambio de ACL de prueba");
     printf("✓ 3 entradas escritas\n");
     
-    printf("\n[3.2] Leyendo log de auditoría...\n");
-    audit_entry_t entries[100];
-    int count = 100;
-    
-    if (audit_read_log(entries, 100, &count) == 0) {
-        printf("✓ Log leído correctamente: %d entradas totales\n", count);
-        
-        printf("\nÚltimas 5 entradas:\n");
-        int start = (count > 5) ? count - 5 : 0;
-        for (int i = start; i < count; i++) {
-            printf("  [%d] Usuario: %s | Op: %s | Detalles: %s\n",
-                   i + 1, entries[i].user, entries[i].operation, entries[i].details);
-        }
+    printf("\n[3.2] Leyendo log de auditoría con audit_get_log()...\n");
+    char buffer[4096];
+    if (audit_get_log(buffer, sizeof(buffer), 0) == 0) {
+        printf("Contenido del log (primeras entradas):\n");
+        printf("%s\n", buffer);
     } else {
         printf("✗ ERROR: No se pudo leer el log\n");
     }
@@ -149,13 +148,8 @@ int main() {
     printf("Fecha: %s", __DATE__);
     printf("\n========================================\n");
     
-    // Inicializar
-    printf("\nInicializando Security Manager...\n");
-    if (security_init() < 0) {
-        fprintf(stderr, "✗ ERROR: Fallo al inicializar\n");
-        return 1;
-    }
-    printf("✓ Inicialización exitosa\n");
+    // No hay security_init()/security_cleanup en tu implementación,
+    // así que no se llaman aquí para evitar referencias indefinidas.
     
     // Ejecutar tests
     test_acl();
@@ -176,12 +170,10 @@ int main() {
     printf("  TODAS LAS PRUEBAS COMPLETADAS\n");
     printf("========================================\n");
     
-    // Cleanup
-    security_cleanup();
-    
     printf("\nRevisa el archivo de audit log:\n");
-    printf("  cat audit.log\n");
+    printf("  cat /var/log/storage_audit.log\n");
     printf("\n");
     
     return 0;
 }
+

@@ -24,6 +24,8 @@ SOURCES_CORE = \
 	$(SRC_DIR)/memory_manager.c \
 	$(SRC_DIR)/security_manager.c
 
+
+
 OBJECTS_CORE = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SOURCES_CORE))
 
 TEST_PROG = $(BUILD_DIR)/storage_test
@@ -36,7 +38,7 @@ SOURCES_EXTRA = \
 	$(SRC_DIR)/backup_engine.c \
 	$(SRC_DIR)/performance_tuner.c \
 	$(SRC_DIR)/ipc_server.c \
-	$(SRC_DIR)/utils.c
+
 
 OBJECTS_EXTRA = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES_EXTRA))
 
@@ -158,9 +160,10 @@ $(DAEMON): dirs-extra $(DAEMON_OBJ) $(DAEMON_MAIN_OBJ) $(OBJECTS_EXTRA)
 	$(CC) $(CFLAGS) $(DAEMON_OBJ) $(DAEMON_MAIN_OBJ) $(OBJECTS_EXTRA) -o $@ $(LDFLAGS)
 	@echo "✓ Daemon compilado: $@"
 
-$(CLI): dirs-extra $(OBJECTS_EXTRA) cli/storage_cli.c
+# CLI: enlazar también con los objetos core (RAID/LVM/FS/Memoria/Seguridad)
+$(CLI): dirs-extra $(OBJECTS_EXTRA) $(OBJECTS_CORE) cli/storage_cli.c
 	@echo "Enlazando CLI..."
-	$(CC) $(CFLAGS) cli/storage_cli.c $(OBJECTS_EXTRA) -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) cli/storage_cli.c $(OBJECTS_EXTRA) $(OBJECTS_CORE) -o $@ $(LDFLAGS)
 	@echo "✓ CLI compilado: $@"
 
 $(TEST_MONITOR): dirs-extra $(OBJ_DIR)/monitor.o $(OBJ_DIR)/utils.o tests/test_monitor.c
@@ -183,9 +186,9 @@ $(TEST_DAEMON_BIN): dirs-extra $(DAEMON_OBJ) tests/test_daemon.c
 	@echo "Compilando test_daemon..."
 	$(CC) $(CFLAGS) tests/test_daemon.c $(DAEMON_OBJ) -o $@ $(LDFLAGS)
 
-$(TEST_SECURITY_BIN): dirs-extra $(OBJ_DIR)/security_manager.o tests/test_security.c
+$(TEST_SECURITY_BIN): dirs-extra $(OBJ_DIR)/security_manager.o $(OBJ_DIR)/utils.o tests/test_security.c
 	@echo "Compilando test_security..."
-	$(CC) $(CFLAGS) tests/test_security.c $(OBJ_DIR)/security_manager.o -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) tests/test_security.c $(OBJ_DIR)/security_manager.o $(OBJ_DIR)/utils.o -o $@ $(LDFLAGS)
 
 # =======================
 #   KERNEL MODULE
@@ -401,3 +404,4 @@ help:
 	@echo "  help             - Muestra esta ayuda"
 	@echo "  info             - Info del sistema"
 	@echo "========================================="
+

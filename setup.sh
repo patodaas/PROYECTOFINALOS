@@ -117,7 +117,8 @@ install_dependencies() {
         print_success "Kernel headers installed"
         
         echo "Installing automation tools..."
-        apt install -y mailutils >/dev/null 2>&1 || true
+        DEBIAN_FRONTEND=noninteractive \
+            apt install -y mailutils >/dev/null 2>&1 || true
         print_success "Automation tools installed"
             
     elif [ "$DISTRO" = "centos" ] || [ "$DISTRO" = "rhel" ] || [ "$DISTRO" = "fedora" ]; then
@@ -735,3 +736,4 @@ main() {
 
 # Ejecutar script
 main "$@"
+
