@@ -236,46 +236,37 @@ typedef enum {
     AUDIT_SECURITY_EVENT
 } audit_operation_t;
 
-/* Estructura de entrada de auditoría */
+/* Entrada de log de auditoría */
 typedef struct {
-    time_t timestamp;
-    char user[64];
-    char operation[128];
-    char details[256];
-    int success;
+    time_t timestamp;                   // Momento del evento
+    audit_operation_t operation;        // Tipo de operación
+    char user[64];                      // Usuario que realizó la operación
+    char details[256];                  // Detalles del evento
 } audit_entry_t;
 
 /**
  * Registra una operación en el log de auditoría
- * @param operation: Tipo de operación
- * @param user: Usuario que realizó la operación
- * @param details: Detalles de la operación
- * @return: SUCCESS o código de error
  */
 int audit_log(audit_operation_t operation, const char *user, const char *details);
-int audit_log(const char *operation, const char *user, const char *details);
 
 /**
- * Obtiene entradas del log de auditoría
+ * Obtiene entradas del log de auditoría (en formato texto)
  * @param output: Buffer para el output
  * @param size: Tamaño del buffer
  * @param num_entries: Número de entradas a obtener (0 para todas)
- * @return: SUCCESS o código de error
  */
 int audit_get_log(char *output, size_t size, int num_entries);
 
 /**
- * Lee entradas del log de auditoría
+ * Lee entradas del log de auditoría (formato estructurado)
  * @param entries: Array de entradas a llenar
  * @param max_entries: Tamaño máximo del array
  * @param count: Número de entradas encontradas (salida)
- * @return: SUCCESS o código de error
  */
 int audit_read_log(audit_entry_t *entries, int max_entries, int *count);
 
 /**
  * Limpia el log de auditoría (requiere permisos especiales)
- * @return: SUCCESS o código de error
  */
 int audit_clear_log(void);
 
@@ -284,6 +275,7 @@ int audit_clear_log(void);
  * @return: SUCCESS si íntegro, ERROR si manipulado
  */
 int audit_verify_integrity(void);
+
 
 /* ========== Utilidades ========== */
 
@@ -321,4 +313,3 @@ int security_is_root(void);
 void security_attrs_to_string(unsigned int flags, char *buffer, size_t size);
 
 #endif /* SECURITY_MANAGER_H */
-
