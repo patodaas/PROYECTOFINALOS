@@ -175,9 +175,9 @@ $(TEST_PERF): dirs-extra $(OBJ_DIR)/performance_tuner.o $(OBJ_DIR)/utils.o tests
 	@echo "Compilando test_perf..."
 	$(CC) $(CFLAGS) tests/test_perf.c $(OBJ_DIR)/performance_tuner.o $(OBJ_DIR)/utils.o -o $@ $(LDFLAGS)
 
-$(TEST_IPC): dirs-extra $(OBJ_DIR)/ipc_server.o $(OBJ_DIR)/utils.o tests/test_ipc.c
+$(TEST_IPC): dirs-extra $(OBJ_DIR)/ipc_server.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/performance_tuner.o tests/test_ipc.c
 	@echo "Compilando test_ipc..."
-	$(CC) $(CFLAGS) tests/test_ipc.c $(OBJ_DIR)/ipc_server.o $(OBJ_DIR)/utils.o -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) tests/test_ipc.c $(OBJ_DIR)/ipc_server.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/performance_tuner.o -o $@ $(LDFLAGS)
 
 $(TEST_DAEMON_BIN): dirs-extra $(DAEMON_OBJ) tests/test_daemon.c
 	@echo "Compilando test_daemon..."
