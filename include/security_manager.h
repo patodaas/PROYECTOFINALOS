@@ -2,6 +2,7 @@
 #define SECURITY_MANAGER_H
 
 #include "common.h"
+#include <time.h>
 
 /* ========== Access Control Lists (ACL) ========== */
 
@@ -68,9 +69,10 @@ int acl_set_recursive(const char *path, const char *user, const char *perms);
 
 /* Información de volumen encriptado */
 typedef struct {
-    char device[MAX_PATH];      // Dispositivo físico (e.g., /dev/loop0)
-    char name[MAX_NAME];        // Nombre del mapping
+    char device[256];           // Dispositivo físico (e.g., /dev/loop0)
+    char name[64];              // Nombre del mapping
     char dm_path[MAX_PATH];     // Ruta del device mapper (e.g., /dev/mapper/secure)
+    char dm_name[64];           // Nombre del device mapper
     int is_open;                // 1 si está abierto, 0 si no
     char cipher[64];            // Algoritmo de cifrado
     int key_size;               // Tamaño de clave en bits
@@ -127,6 +129,14 @@ int luks_is_luks(const char *device);
 int luks_get_info(const char *device, encrypted_volume_t *info);
 
 /**
+ * Estado de un volumen LUKS
+ * @param name: Nombre del mapping
+ * @param info: Estructura a llenar
+ * @return: SUCCESS o código de error
+ */
+int luks_status(const char *name, encrypted_volume_t *info);
+
+/**
  * Cambia la contraseña de un volumen LUKS
  * @param device: Dispositivo
  * @param old_pass: Contraseña actual
@@ -178,11 +188,20 @@ int attr_unset(const char *path, unsigned int flags);
 int attr_get(const char *path, unsigned int *flags);
 
 /**
+ * Obtiene atributos como string
+ * @param path: Ruta del archivo
+ * @param attrs: Buffer para atributos
+ * @return: SUCCESS o código de error
+ */
+int get_attributes(const char *path, char *attrs);
+
+/**
  * Hace un archivo inmutable
  * @param path: Ruta del archivo
  * @return: SUCCESS o código de error
  */
 int attr_set_immutable(const char *path);
+int set_immutable(const char *path);
 
 /**
  * Hace un archivo de solo append
@@ -190,6 +209,7 @@ int attr_set_immutable(const char *path);
  * @return: SUCCESS o código de error
  */
 int attr_set_append_only(const char *path);
+int set_append_only(const char *path);
 
 /**
  * Remueve inmutabilidad de un archivo
@@ -197,6 +217,8 @@ int attr_set_append_only(const char *path);
  * @return: SUCCESS o código de error
  */
 int attr_unset_immutable(const char *path);
+int unset_immutable(const char *path);
+int unset_append_only(const char *path);
 
 /* ========== Auditoría ========== */
 
@@ -214,6 +236,15 @@ typedef enum {
     AUDIT_SECURITY_EVENT
 } audit_operation_t;
 
+/* Estructura de entrada de auditoría */
+typedef struct {
+    time_t timestamp;
+    char user[64];
+    char operation[128];
+    char details[256];
+    int success;
+} audit_entry_t;
+
 /**
  * Registra una operación en el log de auditoría
  * @param operation: Tipo de operación
@@ -222,6 +253,7 @@ typedef enum {
  * @return: SUCCESS o código de error
  */
 int audit_log(audit_operation_t operation, const char *user, const char *details);
+int audit_log(const char *operation, const char *user, const char *details);
 
 /**
  * Obtiene entradas del log de auditoría
@@ -231,6 +263,15 @@ int audit_log(audit_operation_t operation, const char *user, const char *details
  * @return: SUCCESS o código de error
  */
 int audit_get_log(char *output, size_t size, int num_entries);
+
+/**
+ * Lee entradas del log de auditoría
+ * @param entries: Array de entradas a llenar
+ * @param max_entries: Tamaño máximo del array
+ * @param count: Número de entradas encontradas (salida)
+ * @return: SUCCESS o código de error
+ */
+int audit_read_log(audit_entry_t *entries, int max_entries, int *count);
 
 /**
  * Limpia el log de auditoría (requiere permisos especiales)
@@ -245,6 +286,17 @@ int audit_clear_log(void);
 int audit_verify_integrity(void);
 
 /* ========== Utilidades ========== */
+
+/**
+ * Inicializa el gestor de seguridad
+ * @return: SUCCESS o código de error
+ */
+int security_init(void);
+
+/**
+ * Limpia recursos del gestor de seguridad
+ */
+void security_cleanup(void);
 
 /**
  * Obtiene el usuario actual
@@ -269,3 +321,4 @@ int security_is_root(void);
 void security_attrs_to_string(unsigned int flags, char *buffer, size_t size);
 
 #endif /* SECURITY_MANAGER_H */
+
