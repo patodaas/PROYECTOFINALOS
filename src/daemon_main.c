@@ -17,13 +17,9 @@
 /* Constantes y variables externas del daemon framework */
 extern volatile sig_atomic_t daemon_running;
 extern volatile sig_atomic_t reload_config;
-extern const char *DAEMON_NAME;
-extern void daemon_reload_config(void);
 extern int daemon_init(void);
 extern int daemon_create_pidfile(const char *pidfile);
-extern void daemon_remove_pidfile(const char *pidfile);
 extern int daemon_setup_signals(void);
-extern void daemon_set_resource_limits(void);
 extern int daemon_monitor_workers(worker_t *workers, int max_workers);
 extern int daemon_spawn_worker(void (*func)(void *), void *arg);
 extern void daemon_shutdown(void);
