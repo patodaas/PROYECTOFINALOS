@@ -8,7 +8,7 @@ Sistema completo de gestión de almacenamiento empresarial con monitoreo, backup
 - **Diego Cristobal Gael Serna Domínguez** - Parts 1-4 (RAID, LVM, Filesystems, Virtual Memory)
 - **Angel Valencia Saavedra** - Parts 5, 11-12 (Security, Process Management, Automation)
 
----
+***
 
 ## 📦 Componentes Implementados
 
@@ -75,7 +75,7 @@ Sistema completo de gestión de almacenamiento empresarial con monitoreo, backup
 - ✅ Systemd integration (timers and services)
 - ✅ Cron compatibility
 
----
+***
 
 ## 🚀 Instalación Rápida
 
@@ -89,11 +89,11 @@ chmod +x setup.sh
 # 3. Ejecutar instalación completa (requiere root)
 sudo ./setup.sh install
 
-# O usar el menú interactivo
+# O usar el menú interactivo (si está habilitado)
 sudo ./setup.sh
 ```
 
----
+***
 
 ## 📋 Requisitos del Sistema
 
@@ -123,7 +123,7 @@ sudo yum install -y gcc make cmake git sqlite sqlite-devel \
 - 20+ GB espacio en disco
 - CPU con 2+ cores
 
----
+***
 
 ## 🔧 Compilación Manual
 
@@ -131,27 +131,23 @@ sudo yum install -y gcc make cmake git sqlite sqlite-devel \
 # Compilar todo el proyecto
 make all
 
+# Ejecutar tests core
+make test-core
+
 # Compilar solo el módulo del kernel
-make kernel
-
-# Instalar scripts de automatización
-sudo make install-automation
-
-# Instalar servicios systemd
-sudo make install-systemd
-
-# Ejecutar tests
-make test
+cd kernel_module
+make
+cd ..
 
 # Limpiar archivos compilados
 make clean
 ```
 
----
+***
 
 ## 📂 Estructura del Proyecto
 
-```
+```text
 storage_manager/
 ├── include/                  # Headers
 │   ├── monitor.h
@@ -191,7 +187,7 @@ storage_manager/
 │   ├── auto_backup.sh        # Backup automatizado
 │   └── perf_report.sh        # Reportes de rendimiento
 │
-├── systemd/                  # Servicios systemd
+├── systemd/                  # Servicios systemd (opcional)
 │   ├── storage_daemon.service
 │   ├── storage_backup.service
 │   ├── storage_backup.timer
@@ -221,169 +217,157 @@ storage_manager/
 └── README.md                 # Esta documentación
 ```
 
----
+***
 
 ## 💻 Uso del Sistema
 
 ### 1. Iniciar el Daemon
 
 ```bash
-# Método 1: Systemd (recomendado)
-sudo systemctl start storage_daemon
-sudo systemctl enable storage_daemon  # Auto-inicio
+# Método 1: Manual (demo/proyecto)
+cd ~/storage_manager
+sudo ./bin/storage_daemon    # Dejar corriendo en una terminal
 
-# Método 2: Manual en foreground (debugging)
-sudo ./bin/storage_daemon -f
-
-# Método 3: Manual en background
-sudo ./bin/storage_daemon
-
-# Verificar estado
-sudo systemctl status storage_daemon
-ps aux | grep storage_daemon
+# Verificar estado desde otra terminal
+./bin/storage_cli status
 cat /var/run/storage_mgr.pid
+ps aux | grep storage_daemon
 ```
 
-### 2. Cliente CLI - Comandos Disponibles
+***
 
-#### Comandos de Monitoreo
+### 2. Cliente CLI - Comandos Más Importantes
+
+#### Comandos generales
 
 ```bash
-# Ver estadísticas de dispositivo
-sudo storage_cli monitor stats sda
+# Ayuda general
+./bin/storage_cli help
 
-# Iniciar monitoreo continuo (cada 5 segundos)
-sudo storage_cli monitor start 5
-
-# Detener monitoreo
-sudo storage_cli monitor stop
+# Ver estado del daemon y del sistema
+./bin/storage_cli status
 ```
 
-#### Comandos de Backup
+#### Monitoreo
 
 ```bash
-# Crear backup completo
-sudo storage_cli backup create /data /backup full
-
-# Crear backup incremental
-sudo storage_cli backup create /data /backup incremental
-
-# Listar backups disponibles
-sudo storage_cli backup list
-
-# Restaurar backup
-sudo storage_cli backup restore backup-20250527-143022 /restore
-
-# Verificar integridad de backup
-sudo storage_cli backup verify backup-20250527-143022
+# Ver estadísticas de un dispositivo (ajusta sda/sda1 según tu VM)
+./bin/storage_cli monitor stats sda
+# o
+./bin/storage_cli monitor stats sda1
 ```
 
-#### Comandos de Performance
+#### Backup (vía CLI)
 
 ```bash
-# Ejecutar benchmark
-sudo storage_cli perf benchmark sda /mnt/data/testfile
+# Listar backups registrados en la base de datos
+./bin/storage_cli backup list
 
-# Ajustar configuración
-sudo storage_cli perf tune sda --scheduler=deadline --readahead=2048
-
-# Obtener recomendaciones por workload
-sudo storage_cli perf recommend sda database
-# Workloads disponibles: database, web, fileserver, general
+# (Opcional, según lo que tengas configurado)
+# ./bin/storage_cli backup create /mnt/data /backup full
+# ./bin/storage_cli backup verify BACKUP_ID
+# ./bin/storage_cli backup restore BACKUP_ID /restore
 ```
 
-#### Comandos Generales
+#### Performance
 
 ```bash
-# Ver estado del daemon
-storage_cli status
+# Ejecutar benchmark (ajusta el dispositivo)
+./bin/storage_cli perf benchmark sda /tmp/perf_test
 
-# Ayuda completa
-storage_cli help
+# Obtener recomendaciones según tipo de carga (por ejemplo database)
+./bin/storage_cli perf recommend sda database
 ```
 
-### 3. Módulo del Kernel
+***
+
+## 3. Módulo del Kernel
 
 ```bash
+cd ~/storage_manager/kernel_module
+
+# Compilar módulo
+make
+
 # Cargar módulo
-cd kernel_module
-sudo make          # Compilar primero
-sudo make install  # Luego instalar
+sudo insmod storage_stats.ko
 
-# Ver estadísticas
+# Ver estadísticas expuestas por el módulo
 cat /proc/storage_stats
 
-# Resetear estadísticas
-echo "reset" | sudo tee /proc/storage_stats
-
-# Habilitar/deshabilitar debug
-echo "debug on" | sudo tee /proc/storage_stats
-echo "debug off" | sudo tee /proc/storage_stats
-
-# Ver logs del kernel
-dmesg | grep storage_stats
-
 # Descargar módulo
-sudo make uninstall
+sudo rmmod storage_stats
 ```
 
-### 4. Scripts de Automatización
+Salida típica esperada:
 
-#### Health Check
+```text
+Storage Statistics Module v1.0
+================================
+
+No devices tracked yet.
+```
+
+***
+
+## 4. Scripts de Automatización
+
+### Health Check
 
 ```bash
+cd ~/storage_manager
+
 # Ejecutar verificación manual
-sudo health_check.sh
+sudo ./scripts/health_check.sh
 
 # Ver logs
 sudo tail -f /var/log/storage_health.log
 
 # Ver reportes generados
-cat /var/log/storage_health_report_*.txt
+ls -lh /var/log/storage_health_report_*.txt
 ```
 
-#### Backup Automatizado
+### Backup Automatizado
 
 ```bash
-# Backup completo
-sudo auto_backup.sh --full /mnt/data
+cd ~/storage_manager
 
-# Backup incremental
-sudo auto_backup.sh --incremental /mnt/data
+# Preparar datos de prueba
+sudo mkdir -p /mnt/data
+sudo touch /mnt/data/demo1.txt
+sudo touch /mnt/data/demo2.txt
+
+# Modo dry-run (prueba sin ejecutar cambios)
+sudo ./scripts/auto_backup.sh --dry-run
+
+# Backup completo de /mnt/data
+sudo ./scripts/auto_backup.sh --full /mnt/data
 
 # Listar backups
-sudo auto_backup.sh --list
+sudo ./scripts/auto_backup.sh --list
 
-# Verificar backup
-sudo auto_backup.sh --verify /backup/full/full_20250101.tar.gz
-
-# Restaurar backup
-sudo auto_backup.sh --restore /backup/full/full_20250101.tar.gz /restore
-
-# Limpiar backups antiguos (mantener últimos 7)
-sudo auto_backup.sh --cleanup --keep 7
-
-# Modo dry-run (prueba sin ejecutar)
-sudo auto_backup.sh --dry-run
-
-# Ver ayuda
-sudo auto_backup.sh --help
+# (Opcional) Verificar/Restaurar usando rutas reales que te muestre --list
+# sudo ./scripts/auto_backup.sh --verify /backup/full/NOMBRE.tar.gz
+# sudo ./scripts/auto_backup.sh --restore /backup/full/NOMBRE.tar.gz /restore
 ```
 
-#### Reporte de Rendimiento
+### Reporte de Rendimiento
 
 ```bash
-# Generar reporte automático
-sudo perf_report.sh
+cd ~/storage_manager
 
-# Generar con nombre específico
-sudo perf_report.sh --output /tmp/mi_reporte.txt
+# Generar reporte automático
+sudo ./scripts/perf_report.sh
 
 # Ver reporte
-cat /var/log/performance_report_*.txt
+ls -lh /var/log/performance_report_*.txt
 ```
 
-### 5. Systemd - Automatización
+***
+
+## 5. Systemd - Automatización (Opcional)
+
+Si decides usar systemd en lugar de lanzarlo a mano:
 
 ```bash
 # Habilitar servicios
@@ -404,404 +388,88 @@ sudo systemctl list-timers storage_*
 sudo journalctl -u storage_daemon -f
 sudo journalctl -u storage_backup.service -n 50
 sudo journalctl -u storage_health.service -n 50
-
-# Detener servicios
-sudo systemctl stop storage_backup.timer
-sudo systemctl stop storage_health.timer
-
-# Deshabilitar
-sudo systemctl disable storage_backup.timer
 ```
 
-### 6. Configuración con Cron (Alternativa)
-
-```bash
-# Editar crontab
-sudo crontab -e
-
-# Agregar:
-# Health check cada hora
-0 * * * * /usr/local/bin/health_check.sh
-
-# Backup completo diario a las 2 AM
-0 2 * * * /usr/local/bin/auto_backup.sh --full /mnt/data
-
-# Backup incremental cada 6 horas
-0 */6 * * * /usr/local/bin/auto_backup.sh --incremental /mnt/data
-
-# Reporte semanal los lunes a las 8 AM
-0 8 * * 1 /usr/local/bin/perf_report.sh
-
-# Limpieza mensual (día 1 a las 3 AM)
-0 3 1 * * /usr/local/bin/auto_backup.sh --cleanup --keep 10
-```
-
----
+***
 
 ## 📊 Escenarios de Uso Real
 
-### Escenario 1: Servidor de Base de Datos
+### Escenario 1: Verificar instalación y core
 
 ```bash
-# 1. Iniciar daemon
-sudo systemctl start storage_daemon
+cd ~/storage_manager
+sudo make all
+sudo make test-core
 
-# 2. Ver estadísticas actuales
-sudo storage_cli monitor stats sda
+sudo ./bin/storage_daemon          # terminal 1
 
-# 3. Optimizar para workload de base de datos
-sudo storage_cli perf recommend sda database
-# Responder 'y' para aplicar optimizaciones
-
-# 4. Iniciar monitoreo continuo
-sudo storage_cli monitor start 10
-
-# 5. Configurar backup automático con snapshot LVM
-sudo auto_backup.sh --full /var/lib/mysql
-sudo systemctl enable storage_backup.timer
+# terminal 2
+./bin/storage_cli status
+./bin/storage_cli memory status
+./bin/storage_cli monitor stats sda
 ```
 
-### Escenario 2: Backup Automático Diario
+### Escenario 2: Health check + backup script
 
 ```bash
-# Script diario (/usr/local/bin/daily_backup.sh)
-#!/bin/bash
-/usr/local/bin/auto_backup.sh --incremental /data
-/usr/local/bin/auto_backup.sh --cleanup --keep 7
+cd ~/storage_manager
 
-# Hacer ejecutable
-sudo chmod +x /usr/local/bin/daily_backup.sh
+sudo mkdir -p /mnt/data
+sudo touch /mnt/data/demo1.txt
 
-# Agregar a cron (2 AM)
-sudo crontab -e
-# Agregar: 0 2 * * * /usr/local/bin/daily_backup.sh
+sudo ./scripts/auto_backup.sh --full /mnt/data
+sudo ./scripts/auto_backup.sh --list
+
+sudo ./scripts/health_check.sh
+sudo tail -n 20 /var/log/storage_health.log
 ```
 
-### Escenario 3: Análisis de Performance
+### Escenario 3: Kernel module
 
 ```bash
-# 1. Benchmark antes de optimizar
-sudo storage_cli perf benchmark sda /mnt/data/test > before.txt
-
-# 2. Aplicar optimizaciones
-sudo storage_cli perf tune sda --scheduler=deadline --readahead=2048
-
-# 3. Benchmark después
-sudo storage_cli perf benchmark sda /mnt/data/test > after.txt
-
-# 4. Comparar resultados
-diff before.txt after.txt
+cd ~/storage_manager/kernel_module
+make
+sudo insmod storage_stats.ko
+cat /proc/storage_stats
+sudo rmmod storage_stats
 ```
 
-### Escenario 4: Monitoreo y Alertas
-
-```bash
-# 1. Habilitar health check automático
-sudo systemctl enable storage_health.timer
-sudo systemctl start storage_health.timer
-
-# 2. Configurar alertas por email
-sudo nano /usr/local/bin/health_check.sh
-# Editar: EMAIL_ALERT="admin@empresa.com"
-
-# 3. Ver próximas ejecuciones
-sudo systemctl list-timers storage_health.timer
-
-# 4. Ver reportes generados
-ls -lh /var/log/storage_health_report_*.txt
-```
-
----
+***
 
 ## 🧪 Testing
 
-### Tests Automatizados
-
 ```bash
-# Ejecutar todos los tests
-sudo make test
+cd ~/storage_manager
 
-# Tests individuales
-sudo ./bin/test_monitor
-sudo ./bin/test_backup
-sudo ./bin/test_perf
-sudo ./bin/test_ipc
-sudo ./bin/test_daemon
-sudo ./bin/test_security
+# Ejecutar tests core del proyecto
+sudo make test-core
 
-# Test rápido completo
+# Test rápido (si está configurado)
 sudo ./quick_test.sh
 ```
 
-### Crear Dispositivos Loop para Testing
+***
 
-```bash
-# Crear imágenes de disco (1GB cada una)
-for i in {0..7}; do
-    dd if=/dev/zero of=/tmp/disk$i.img bs=1M count=1024
-    sudo losetup /dev/loop$i /tmp/disk$i.img
-done
+## 🗄️ Logs y Directorios Importantes
 
-# Verificar
-losetup -a
-
-# Limpiar después
-for i in {0..7}; do
-    sudo losetup -d /dev/loop$i
-    rm /tmp/disk$i.img
-done
-```
-
-### Test de Integración Completo
-
-```bash
-# 1. Crear datos de prueba
-sudo mkdir -p /mnt/test_data
-sudo dd if=/dev/urandom of=/mnt/test_data/file1.bin bs=1M count=50
-
-# 2. Backup completo
-sudo auto_backup.sh --full /mnt/test_data
-
-# 3. Modificar datos
-sudo dd if=/dev/urandom of=/mnt/test_data/file2.bin bs=1M count=25
-
-# 4. Backup incremental
-sudo auto_backup.sh --incremental /mnt/test_data
-
-# 5. Simular pérdida de datos
-sudo rm -rf /mnt/test_data/*
-
-# 6. Restaurar
-LATEST_BACKUP=$(ls -t /backup/full/*.tar.gz | head -1)
-sudo auto_backup.sh --restore $LATEST_BACKUP /mnt/test_data
-
-# 7. Verificar
-ls -lh /mnt/test_data/
-
-# 8. Health check
-sudo health_check.sh
-
-# 9. Generar reporte
-sudo perf_report.sh
-```
-
----
-
-## 🗄️ Bases de Datos y Logs
-
-### Bases de Datos
-
-```bash
-# Monitoring DB
-sqlite3 /var/lib/storage_mgr/monitoring.db
-> SELECT * FROM performance_history ORDER BY timestamp DESC LIMIT 10;
-> .schema
-> .exit
-
-# Backups DB
-sqlite3 /var/lib/storage_mgr/backups.db
-> SELECT backup_id, timestamp, type, size_bytes FROM backups;
-> .exit
-```
-
-### Logs del Sistema
-
-```bash
-# Ubicación de logs
+```text
 /var/log/
-├── storage_health.log                    # Health checks
-├── storage_backup.log                    # Backups
-├── storage_health_report_*.txt           # Reportes de salud
-└── performance_report_*.txt              # Reportes de rendimiento
+  ├── storage_health.log              # Health checks
+  ├── storage_backup.log              # Backups
+  ├── storage_health_report_*.txt     # Reportes de salud
+  └── performance_report_*.txt        # Reportes de rendimiento
 
 /var/run/
-└── storage_mgr.pid                       # PID del daemon
+  └── storage_mgr.pid                 # PID del daemon
 
 /backup/
-├── full/                                 # Backups completos
-├── incremental/                          # Backups incrementales
-├── snapshots/                            # Snapshots LVM
-└── logs/                                 # Logs de backup
+  ├── full/                           # Backups completos
+  ├── incremental/                    # Backups incrementales
+  ├── snapshots/                      # Snapshots LVM
+  └── logs/                           # Logs de backup
 ```
 
-### Ver Logs
-
-```bash
-# Daemon logs
-sudo journalctl -u storage_daemon -f
-
-# Health check logs
-sudo tail -f /var/log/storage_health.log
-
-# Backup logs
-sudo tail -f /var/log/storage_backup.log
-
-# Kernel module logs
-dmesg | grep storage_stats
-
-# System logs
-tail -f /var/log/syslog | grep storage
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Problema: Daemon no inicia
-
-```bash
-# Verificar si ya está corriendo
-ps aux | grep storage_daemon
-
-# Ver logs de error
-sudo journalctl -u storage_daemon -n 50
-
-# Limpiar PID file obsoleto
-sudo rm /var/run/storage_mgr.pid
-
-# Reintentar
-sudo systemctl restart storage_daemon
-```
-
-### Problema: Módulo del kernel no carga
-
-```bash
-# Ver errores
-dmesg | tail -20
-
-# Verificar headers del kernel
-uname -r
-ls /lib/modules/$(uname -r)/build
-
-# Reinstalar headers
-sudo apt install linux-headers-$(uname -r)
-
-# Recompilar
-cd kernel_module
-sudo make clean && sudo make
-sudo make install
-```
-
-### Problema: Errores de permisos
-
-```bash
-# Verificar ejecución como root
-sudo storage_cli status
-
-# Verificar permisos de directorios
-sudo ls -la /var/lib/storage_mgr
-sudo ls -la /backup
-
-# Recrear directorios
-sudo mkdir -p /var/lib/storage_mgr /backup
-sudo chmod 755 /var/lib/storage_mgr /backup
-```
-
-### Problema: Backup falla
-
-```bash
-# Verificar espacio en disco
-df -h /backup
-
-# Verificar permisos
-ls -ld /backup
-
-# Crear directorios faltantes
-sudo mkdir -p /backup/{full,incremental,snapshots,logs}
-
-# Ver log de error
-sudo tail -50 /var/log/storage_backup.log
-
-# Ejecutar en modo debug
-sudo bash -x /usr/local/bin/auto_backup.sh --full /mnt/data
-```
-
-### Problema: Timers no se ejecutan
-
-```bash
-# Verificar que están habilitados
-sudo systemctl list-timers storage_*
-
-# Habilitar si es necesario
-sudo systemctl enable storage_backup.timer
-sudo systemctl start storage_backup.timer
-
-# Ver próxima ejecución
-sudo systemctl list-timers --all
-```
-
----
-
-## 📈 Métricas y Rendimiento
-
-### System Overhead
-- **CPU:** < 1% en monitoreo normal
-- **Memoria:** ~50 MB
-- **Disco:** ~10 MB (bases de datos)
-
-### Capacidades
-- **Clientes simultáneos:** 64
-- **Dispositivos monitoreados:** 16
-- **Backups concurrentes:** 4
-- **Samples históricos:** Ilimitados (con cleanup)
-
-### Performance Tips
-
-**Para Backups:**
-- Usar compresión para backups completos
-- Backups incrementales para cambios frecuentes
-- Programar backups en horas de bajo uso
-- Verificar integridad después de cada backup
-
-**Para Monitoreo:**
-- Ajustar intervalos según carga del sistema
-- Usar `nice`/`ionice` para procesos de background
-- Limpiar datos históricos antiguos regularmente
-
----
-
-## 🔒 Seguridad
-
-### Características de Seguridad
-
-- **Root requerido:** Todas las operaciones privilegiadas
-- **IPC seguro:** UNIX domain sockets con permisos 666
-- **Logs auditables:** Todas las operaciones registradas
-- **Integridad:** Checksums SHA256 en backups
-- **Encriptación:** Soporte LUKS para volúmenes
-
-### Permisos Recomendados
-
-```bash
-# Scripts (solo root)
-sudo chmod 700 /usr/local/bin/*.sh
-
-# Logs (solo root)
-sudo chmod 600 /var/log/storage_*.log
-
-# Directorio de backups
-sudo chmod 700 /backup
-```
-
-### Audit Trail
-
-```bash
-# Ver audit trail
-sudo grep "\[INFO\]\|\[ERROR\]\|\[WARN\]" /var/log/storage_health.log
-```
-
----
-
-## 📚 Referencias
-
-- [Linux Device Drivers](https://lwn.net/Kernel/LDD3/)
-- [Advanced Linux Programming](http://advancedlinuxprogramming.com/)
-- [LVM HOWTO](https://tldp.org/HOWTO/LVM-HOWTO/)
-- [Linux Kernel Module Programming Guide](https://sysprog21.github.io/lkmpg/)
-- [Linux RAID Wiki](https://raid.wiki.kernel.org/)
-- [Systemd Documentation](https://www.freedesktop.org/wiki/Software/systemd/)
-
----
+***
 
 ## 🤝 Contribuciones
 
@@ -812,15 +480,14 @@ Este proyecto es parte de un trabajo académico del curso de Sistemas Operativos
 - **Diego Cristobal Gael Serna Domínguez:** Parts 1-4
 - **Angel Valencia Saavedra:** Parts 5, 11-12
 
----
+***
 
 ## 📄 Licencia
 
-Proyecto Académico - Universidad Autónoma de Guadalajara - 2025
-
+Proyecto Académico - Universidad Autónoma de Guadalajara - 2025  
 Uso exclusivo para fines educativos.
 
----
+***
 
 ## 📞 Soporte y Ayuda
 
@@ -828,31 +495,31 @@ Uso exclusivo para fines educativos.
 
 ```bash
 # Estado completo del sistema
-sudo health_check.sh
-sudo perf_report.sh
-sudo storage_cli status
+sudo ./scripts/health_check.sh
+sudo ./scripts/perf_report.sh
+./bin/storage_cli status
 
 # Estado del daemon
-sudo systemctl status storage_daemon
 ps aux | grep storage_daemon
+cat /var/run/storage_mgr.pid
 
-# Verificar instalación
-which storage_daemon health_check.sh auto_backup.sh
+# Verificar instalación básica
+ls -l bin/
+ls -l scripts/
+ls -l docs/
 
-# Ver todos los logs
-sudo journalctl -u storage_daemon -u storage_backup.service -u storage_health.service --since today
+# Ver logs
+sudo journalctl -u storage_daemon -n 50
+sudo tail -n 50 /var/log/storage_health.log
+sudo tail -n 50 /var/log/storage_backup.log
 ```
 
-**¿Necesitas ayuda?**
+**Flujo recomendado para demo:**
 
-1. Revisa la sección de Troubleshooting
-2. Ejecuta: `storage_cli help`
-3. Revisa los logs en `/var/log/`
-4. Consulta la documentación en `docs/`
-
----
-
-**Última Actualización:** Noviembre 30, 2025  
-**Versión:** 1.0  
-**Universidad Autónoma de Guadalajara**  
-**Curso:** Linux Systems Programming
+1. `sudo make all && sudo make test-core`  
+2. `sudo ./bin/storage_daemon` (dejar corriendo)  
+3. `./bin/storage_cli status`  
+4. `./bin/storage_cli monitor stats sda`  
+5. `sudo ./scripts/auto_backup.sh --full /mnt/data && --list`  
+6. `sudo ./scripts/health_check.sh`  
+7. Kernel module: `make`, `insmod`, `cat /proc/storage_stats`, `rmmod`.
